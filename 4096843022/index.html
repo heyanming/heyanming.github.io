@@ -1,0 +1,230 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>centOS9 + containerd + nas（nfs） 搭建k8s集群 | Ming的博客</title><meta name="author"><meta name="copyright"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="# 第一步：关闭防火墙# 关闭原因：iptables防火墙会对网络流量进行过滤、转发，如果是内网集群一般都进行关闭，防止影响网络性能。systemctl stop firewalldsystemctl disable firewalld# 禁用SELinux或者用setenforce 0指令将SELinux设置为许可模式，先临时关闭，并配置永久关闭。# 关闭原因：linux增加安全组件，很多组件不">
+<meta property="og:type" content="article">
+<meta property="og:title" content="centOS9 + containerd + nas（nfs） 搭建k8s集群">
+<meta property="og:url" content="https://kingfried.cn/4096843022/index.html">
+<meta property="og:site_name" content="Ming的博客">
+<meta property="og:description" content="# 第一步：关闭防火墙# 关闭原因：iptables防火墙会对网络流量进行过滤、转发，如果是内网集群一般都进行关闭，防止影响网络性能。systemctl stop firewalldsystemctl disable firewalld# 禁用SELinux或者用setenforce 0指令将SELinux设置为许可模式，先临时关闭，并配置永久关闭。# 关闭原因：linux增加安全组件，很多组件不">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kingfried.cn/images/logo_transparent.png">
+<meta property="article:published_time" content="2023-03-25T09:38:25.000Z">
+<meta property="article:modified_time" content="2024-11-16T04:32:37.883Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kingfried.cn/images/logo_transparent.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://kingfried.cn/4096843022/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1624792016029146" crossorigin="anonymous"></script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'centOS9 + containerd + nas（nfs） 搭建k8s集群',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2024-11-16 12:32:37'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/images/logo_transparent.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">10</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Ming的博客"><img class="site-icon" src="/images/logo_transparent.png"/></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">centOS9 + containerd + nas（nfs） 搭建k8s集群</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-03-25T09:38:25.000Z" title="发表于 2023-03-25 17:38:25">2023-03-25</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-11-16T04:32:37.883Z" title="更新于 2024-11-16 12:32:37">2024-11-16</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%BF%90%E7%BB%B4/">运维</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="centOS9 + containerd + nas（nfs） 搭建k8s集群"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="post-content" id="article-container"><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">第一步：关闭防火墙</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">关闭原因：iptables防火墙会对网络流量进行过滤、转发，如果是内网集群一般都进行关闭，防止影响网络性能。</span></span><br><span class="line">systemctl stop firewalld</span><br><span class="line">systemctl disable firewalld</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">禁用SELinux或者用setenforce 0指令将SELinux设置为许可模式，先临时关闭，并配置永久关闭。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">关闭原因：linux增加安全组件，很多组件不兼容。另外容器访问主机系统也必须关闭SELinux。</span></span><br><span class="line">setenforce 0  # 临时</span><br><span class="line">sed -i &#x27;/selinux/s/enforcing/disabled/&#x27; /etc/selinux/config  # 永久</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">关闭swap。先临时关闭，并配置永久关闭。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">关闭原因：内存不足时，Linux会自动使用swap,降低性能，并且无法感知容器OOM。</span></span><br><span class="line">swapoff -a  # 临时</span><br><span class="line">sed -ri &#x27;s/.*swap.*/#&amp;/&#x27; /etc/fstab # 永久</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">加载overlay和br_netfilter模块</span></span><br><span class="line">sudo modprobe overlay  # 加载overlay模块，overlay是一种文件系统，用于实现docker镜像的分层存储</span><br><span class="line">sudo modprobe br_netfilter  # 加载br_netfilter模块，用于在bridge模式下进行网络包过滤</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将overlay和br_netfilter模块添加到containerd.conf文件中</span></span><br><span class="line">cat &lt;&lt;EOF | sudo tee /etc/modules-load.d/containerd.conf</span><br><span class="line">overlay</span><br><span class="line">br_netfilter</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置网络参数</span></span><br><span class="line">cat &lt;&lt;EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">由iptables管理的桥接网络的数据包可以被iptables的规则所处理。</span></span><br><span class="line">net.bridge.bridge-nf-call-iptables = 1</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这行设置开启了IPv4的转发功能。这对于Kubernetes的Pod网络是必要的，因为Pod之间的通信需要通过节点转发。</span></span><br><span class="line">net.ipv4.ip_forward = 1</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这行设置使得由ip6tables管理的桥接网络的数据包可以被ip6tables的规则所处理。这对于使用IPv6的Kubernetes集群是必要的</span></span><br><span class="line">net.bridge.bridge-nf-call-ip6tables = 1</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">Linux系统中用于加载系统级别的内核参数的命令，用于验证是否配置好上述参数</span></span><br><span class="line">sudo sysctl --system</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">安装containerd</span></span><br><span class="line">sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo</span><br><span class="line"></span><br><span class="line">sudo dnf update</span><br><span class="line">sudo dnf install -y containerd</span><br><span class="line"></span><br><span class="line">sudo mkdir -p /etc/containerd</span><br><span class="line">sudo containerd config default | sudo tee /etc/containerd/config.toml</span><br><span class="line"></span><br><span class="line">sudo vi /etc/containerd/config.toml</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这个设置是为了让containerd使用systemd作为cgroup管理器。cgroup是Linux内核的一项功能，用于限制、记录和隔离进程组的资源使用（如CPU、内存、磁盘I/O等）。</span></span><br><span class="line">1、找到[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.runc.options]并将值更改SystemdCgroup为true</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这个设置是为了更改Kubernetes的pause容器镜像的来源。pause容器是每个Pod的父容器，用于持有网络和IPC命名空间以供Pod内的其他容器使用。这里将镜像源从Google的镜像仓库更改为阿里云的镜像仓库，保障网络通畅。</span></span><br><span class="line">2、找到sandbox_image = &quot;k8s.gcr.io/pause:3.6&quot;并改为sandbox_image = &quot;registry.aliyuncs.com/google_containers/pause:3.6&quot;</span><br><span class="line"></span><br><span class="line">sudo systemctl restart containerd</span><br><span class="line">sudo systemctl enable containerd</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">添加kubernetes仓库x86</span></span><br><span class="line">cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo</span><br><span class="line">[kubernetes]</span><br><span class="line">name=Kubernetes</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">如果是arm64架构使用 baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-aarch64</span></span><br><span class="line">baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">启动这个软件源</span></span><br><span class="line">enabled=1</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这两行设置了关闭GPG签名检查。GPG签名是用于验证软件包完整性和来源的一种机制。</span></span><br><span class="line">gpgcheck=0</span><br><span class="line">repo_gpgcheck=0</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这行设置了GPG公钥的位置</span></span><br><span class="line">gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">安装</span></span><br><span class="line">sudo dnf update</span><br><span class="line">sudo dnf install -y kubelet kubeadm kubectl</span><br><span class="line">sudo systemctl enable kubelet</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">master节点设置hostname</span></span><br><span class="line">sudo hostnamectl set-hostname &quot;master-node&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">worker节点设置name</span></span><br><span class="line">sudo hostnamectl set-hostname &quot;worker-node1&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">cat &gt;&gt; /etc/hosts &lt;&lt; EOF</span><br><span class="line">==192.168.1.15 master-node</span><br><span class="line">==192.168.1.14 worker-node1</span><br><span class="line">==192.168.1.13 worker-node2</span><br><span class="line">==192.168.1.16 worker-node3</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">cat &gt;&gt; /etc/hosts &lt;&lt;EOF</span><br><span class="line">192.168.31.113 minio.dduping.com</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">增加ssh免密登陆</span></span><br><span class="line">ssh-copy-id -i id_rsa.pub ming@192.168.31.132</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">安装ufw开启必要端口</span></span><br><span class="line">yum install epel-release</span><br><span class="line">yum install --enablerepo=&quot;epel&quot; ufw</span><br><span class="line">ufw --version</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">master机器上开启如下：</span></span><br><span class="line">sudo ufw allow 6443/tcp</span><br><span class="line">sudo ufw allow 2379/tcp</span><br><span class="line">sudo ufw allow 2380/tcp</span><br><span class="line">sudo ufw allow 10250/tcp</span><br><span class="line">sudo ufw allow 10251/tcp</span><br><span class="line">sudo ufw allow 10252/tcp</span><br><span class="line">sudo ufw allow 10255/tcp</span><br><span class="line">sudo ufw reload</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">worker机器上开启如下：</span></span><br><span class="line">sudo ufw allow 10251/tcp</span><br><span class="line">sudo ufw allow 10255/tcp</span><br><span class="line">sudo ufw reload</span><br><span class="line"></span><br><span class="line">kubeadm init \</span><br><span class="line">  --apiserver-advertise-address=YourMasterIP \</span><br><span class="line">  --image-repository registry.aliyuncs.com/google_containers \</span><br><span class="line">  --pod-network-cidr=10.244.0.0/16</span><br><span class="line"><span class="meta prompt_">  </span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">备用命令（重新生成token）</span></span><br><span class="line">sudo kubeadm token create --print-join-command</span><br><span class="line"><span class="meta prompt_">==</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">创建声明目录</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">（<span class="built_in">mkdir</span> -p <span class="variable">$HOME</span>/.kube 这条worker节点也需要执行）</span></span><br><span class="line">mkdir -p $HOME/.kube     </span><br><span class="line">sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config</span><br><span class="line">sudo chown $(id -u):$(id -g) $HOME/.kube/config</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">node加入集群</span></span><br><span class="line">kubeadm join 192.168.1.15:6443 --token dav4g8.ozu40s6q3v3andxm --discovery-token-ca-cert-hash sha256:d091cd31d9ab6fe1601225f0c11b201b354c1f2759ca2bea37bc2d9ca17c8d32</span><br><span class="line"><span class="meta prompt_">==</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">子节点设置为worker</span></span><br><span class="line">kubectl label node worker-node3 node-role.kubernetes.io/worker=worker</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">增加子节点访问集群能力</span></span><br><span class="line">scp $HOME/.kube/config root@YourWorkerIP:~/.kube/config</span><br><span class="line"></span><br><span class="line">kubectl -n kubernetes-dashboard create token admin-user</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">dashboard token</span></span><br><span class="line">eyJhbGciOiJSUzI1NiIsImtpZCI6Il8xTDQxZlRFamJEck5MTEtiRXdCUUN0dk5XS0ZzRzBxcGE1cC1ieHNuMFUifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNjgyNjUyMDY2LCJpYXQiOjE2ODI2NDg0NjYsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJhZG1pbi11c2VyIiwidWlkIjoiZDVhNmFkMGYtZWFiMC00NTJlLTk0ZGUtMTZhM2I0ZDMzZGZhIn19LCJuYmYiOjE2ODI2NDg0NjYsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDphZG1pbi11c2VyIn0.duG9p12Anj3sCcLQMulnNCihJf9Nrx9NR78XNI2VFrovgkLq2ZXndKgeJ9J-vMT0pmqbrlLlF_0SjA1B6I8XmYSWAJe12wCs5q_P7N_QKBOJpBhUCc2fnvPOmCzjvfej49o44r1u2WOpolD67GmKQeF4qMaoenPD1vRMaUsTTihewicbzDFRAKTbC-SGFHttTI7CAv1h9ZtcWcvpsgXrjcZ7hUC54Nla5iwVRlMkR6PrKuVdPufnkyh03hTjGpUCze9jeaBkq7ynUFgL5zzX-v6i4UvXjGipm-6JVgxZ7NkkM8RAteaUHvZHwW6I4L63NQ9sjM_khcCuAA-nCqu9Yg</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">增加对crictl支持</span></span><br><span class="line">crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock</span><br><span class="line">crictl config image-endpoint unix:///var/run/containerd/containerd.sock</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">挂载 nas中的nft</span></span><br><span class="line">dnf install nfs-utils</span><br><span class="line">mkdir -p /nfs/data</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">nft地址</span></span><br><span class="line">mount -t nfs 192.168.1.32:/KubernetesStorage /nfs/data/</span><br><span class="line">systemctl enable nfs-client.target</span><br><span class="line">systemctl enable rpcbind </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">如果以后nfs报错 program not registered  执行一下命令，重启nfs</span></span><br><span class="line">systemctl restart nfs</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果nfs报错</span></span><br><span class="line">systemctl restart nfs-server.service</span><br><span class="line">systemctl restart rpcbind</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">查看nfs挂载命令</span></span><br><span class="line">mount -e 192.168.1.32</span><br><span class="line"></span><br><span class="line">df -h  #验证是否挂载成功 192.168.31.123:/K8storage  5.5T  2.1T  3.5T   38% /nfs/data</span><br><span class="line">echo &quot;testOK?&quot;  &gt; /nfs/data/testOk.txt</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">去查看nfs服务端是否出现testOk.txt文件，有则成功</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">配置补全</span></span><br><span class="line">yum install -y bash-completion</span><br><span class="line">echo &#x27;source &lt;(kubectl completion bash)&#x27; &gt;&gt; ~/.bashrc</span><br><span class="line">source ~/.bashrc</span><br><span class="line">vim ~/.bashrc</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">添加<span class="built_in">alias</span></span> </span><br><span class="line">k=&#x27;kubectl&#x27;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">helm安装(master node)</span></span><br><span class="line">wget https://get.helm.sh/helm-v3.11.2-linux-amd64.tar.gz</span><br><span class="line">tar -zxvf helm-v3.11.2-linux-amd64.tar.gz</span><br><span class="line">mv linux-amd64/helm /usr/local/bin/helm</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">安装nfs插件</span></span><br><span class="line">helm repo add azure http://mirror.azure.cn/kubernetes/charts/</span><br><span class="line">helm repo add stable https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">查看与设置master参与调度</span></span><br><span class="line">kubectl describe node master-node |grep Taints</span><br><span class="line">kubectl taint nodes master-node node-role.kubernetes.io/control-plane-</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">linux代理配置，如果有访问墙外的需求，可使用自己的代理，配置如下</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">不走代理ip</span></span><br><span class="line">export no_proxy=&quot;127.0.0.1,192.168.1.15,192.168.1.13,192.168.1.14&quot;</span><br><span class="line">export http_proxy=&quot;http://192.168.1.5:7891&quot;</span><br><span class="line">export https_proxy=&quot;https://192.168.1.5:7891&quot;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">取消代理</span></span><br><span class="line">unset http_proxy</span><br><span class="line">unset https_proxy</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">当前session强制全部走代理命令（可更改局域网ip）</span></span><br><span class="line">export https_proxy=http://192.168.31.6:7890 http_proxy=http://192.168.31.6:7890 all_proxy=socks5://192.168.31.6:789</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">配置registry http访问，每个节点都要加</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这里由于我的本地镜像仓库没有配置https证书，考虑只有内网机器才能访问镜像仓库，就开启了http访问功能</span></span><br><span class="line">vim /etc/containerd/config.toml</span><br><span class="line">在mirrors下（[plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.mirrors]）增加两个子plugins</span><br><span class="line">  [plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.mirrors.&quot;docker.io&quot;]</span><br><span class="line">    endpoint = [&quot;https://registry.cn-hangzhou.aliyuncs.com&quot;]        ======      [plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.mirrors.&quot;192.168.1.32:55000&quot;]</span><br><span class="line">    endpoint = [&quot;http://192.168.1.32:55000&quot;]</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">iptables查看命令</span></span><br><span class="line">iptables -nL FORWARD</span><br><span class="line">访问不了可能是这里的问题，如果kube网络没有，重启containerd</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>​		 <a href="NFS%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA.md">NFS服务搭建</a> </p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://kingfried.cn"></a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://kingfried.cn/4096843022/">https://kingfried.cn/4096843022/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://kingfried.cn" target="_blank">Ming的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="/images/logo_transparent.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/weixin.jpg" target="_blank"><img class="post-qr-code-img" src="/img/weixin.jpg" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/img/alipay.jpg" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2053857915/" title="grammar"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">grammar</div></div></a></div><div class="next-post pull-right"><a href="/4162974220/" title="docker volume 挂在nas中的nfs"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">docker volume 挂在nas中的nfs</div></div></a></div></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/images/logo_transparent.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name"></div><div class="author-info__description">Ming的博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">10</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">Hey guys, welcome to my blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/4162974220/" title="Conda 常用命令详解">Conda 常用命令详解</a><time datetime="2024-11-16T04:32:37.883Z" title="发表于 2024-11-16 12:32:37">2024-11-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/4162974220/" title="github + github action + hexo + github page + 阿里云ecs搭建个人博客">github + github action + hexo + github page + 阿里云ecs搭建个人博客</a><time datetime="2024-03-25T09:38:25.000Z" title="发表于 2024-03-25 17:38:25">2024-03-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/4162974222/" title="k8s NFS 搭建">k8s NFS 搭建</a><time datetime="2024-03-25T09:38:25.000Z" title="发表于 2024-03-25 17:38:25">2024-03-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/4162974221/" title="k8s mysql 搭建">k8s mysql 搭建</a><time datetime="2024-03-25T09:38:25.000Z" title="发表于 2024-03-25 17:38:25">2024-03-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/342894257/" title="k8s pg 搭建">k8s pg 搭建</a><time datetime="2024-03-25T09:38:25.000Z" title="发表于 2024-03-25 17:38:25">2024-03-25</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By null</div><div class="footer_custom_text"><a target="_blank" rel="noopener" href="http://beian.miit.gov.cn/"><img class="icp-icon" src="/img/gov.png"><span>备案号：京ICP备2022000432号-1</span></a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addGlobalFn('themeChange', runMermaid, 'mermaid')
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const initGitalk = () => {
+    const gitalk = new Gitalk(Object.assign({
+      clientID: '83a6b1ab2778f888bb0f',
+      clientSecret: 'ec1421005ce27a0af316233ad2dc0d24cce1dddc',
+      repo: 'heyanming.github.io',
+      owner: 'heyanming',
+      admin: ['heyanming'],
+      id: '5a798e2d3f109f2708db5d7439a36bbd',
+      updateCountCallback: commentCount
+    },null))
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async() => {
+    if (typeof Gitalk === 'function') initGitalk()
+    else {
+      await getCSS('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css')
+      await getScript('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js')
+      initGitalk()
+    }
+  }
+  
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
